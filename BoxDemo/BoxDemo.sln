@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxDemo", "BoxDemo.csproj", "{CA339CF8-FCCE-4D7B-A761-729027839426}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Box", "..\Box\Box.csproj", "{51BB98C1-7A36-4A8B-BED1-43B097304DC4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CA339CF8-FCCE-4D7B-A761-729027839426}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA339CF8-FCCE-4D7B-A761-729027839426}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA339CF8-FCCE-4D7B-A761-729027839426}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA339CF8-FCCE-4D7B-A761-729027839426}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51BB98C1-7A36-4A8B-BED1-43B097304DC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51BB98C1-7A36-4A8B-BED1-43B097304DC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51BB98C1-7A36-4A8B-BED1-43B097304DC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51BB98C1-7A36-4A8B-BED1-43B097304DC4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
