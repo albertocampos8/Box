@@ -107,6 +107,7 @@
             <asp:Button ID="btnUpload" runat="server" Text="Upload New File" OnClick="btnUpload_Click"  />
             <asp:Button ID="btnUpdateUploadedFile" runat="server" Text="ReUpload File" OnClick="btnUpdateUploadedFile_Click" />
             <asp:Button ID="btnDownloadFile" runat="server" Text="Download File" OnClick="btnDownloadFile_Click" />
+            <asp:Button ID="btnDeleteFile" runat="server" Text="Delete File" OnClick="btnDeleteFile_Click" />
             <br />
             <asp:Label ID="Label22" runat="server" Text="File Name (for this demo, file must already be saved in this App's 'files' folder):"></asp:Label><br />
             <asp:TextBox ID="txtUploadFileName" runat="server">test1.txt</asp:TextBox><br />
@@ -154,6 +155,21 @@
                 <asp:ListItem Text="Company - anyone in company" Value="1"></asp:ListItem>
                 <asp:ListItem Text="Collaborators - folder collaborators only" Value="2" ></asp:ListItem>
             </asp:DropDownList>       
+        </asp:Panel>
+        <asp:Panel ID="divWebLink" runat="server">
+            <hr />
+            <h3>Web Links (Bookmarks)</h3>
+            <asp:Button ID="btnGetWebLink" runat="server" Text="GET Web Link" OnClick="btnGetWebLink_Click" />
+            <asp:Button ID="btnCreateWebLink" runat="server" Text="CREATE Web Link" OnClick="btnCreateWebLink_Click" />
+            <asp:Button ID="btnUpdateWebLink" runat="server" Text="UPDATE Web Link" OnClick="btnUpdateWebLink_Click" />
+            <asp:Button ID="btnDeleteWebLink" runat="server" Text="DELETE Web Link" OnClick="btnDeleteWebLink_Click" />
+            <br />
+            <asp:Label ID="Label37" runat="server" Text="Web Link ID:"></asp:Label><asp:TextBox ID="txtWebLinkID" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label33" runat="server" Text="URL:"></asp:Label><asp:TextBox ID="txtWebLinkURL" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label36" runat="server" Text="Parent Folder ID:"></asp:Label><asp:TextBox ID="txtWebLinkParentFolderID" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label34" runat="server" Text="Web Link Name"></asp:Label><asp:TextBox ID="txtWebLinkName" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label35" runat="server" Text="Web Link Description"></asp:Label><asp:TextBox ID="txtWebLinkDescription" runat="server"></asp:TextBox><br />
+      
         </asp:Panel>
     </form>
 </body>

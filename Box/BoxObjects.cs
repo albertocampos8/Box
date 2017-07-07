@@ -1375,4 +1375,113 @@ namespace BoxObjects
             }
         }
     }
+
+    public class WebLink
+    {
+        public WebLink()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parentFolderID">ID of the folder that will contain the web link</param>
+        /// <param name="url">URL that the Web Link will direct the user to</param>
+        /// <param name="name">Web Link name; this is what the user will see in the Box Interface.
+        /// Set Null and user will see URL as the 'name'</param>
+        /// <param name="description">Web Link description; this appears under the name in the Box Interface</param>
+        public WebLink(string parentFolderID, string url, string name, string description)
+        {
+            m_url = url;
+            m_name = name;
+            m_description = description;
+            m_parent = new Parent(parentFolderID);
+        }
+        private string m_type = "web_link";
+        private string m_id;
+        private Parent m_parent;
+        private string m_name;
+        private string m_url;
+        private string m_description;
+
+        public string type
+        {
+            get
+            {
+                return m_type;
+            }
+
+            set
+            {
+                m_type = value;
+            }
+        }
+
+        public string id
+        {
+            get
+            {
+                return m_id;
+            }
+
+            set
+            {
+                m_id = value;
+            }
+        }
+
+        public Parent parent
+        {
+            get
+            {
+                return m_parent;
+            }
+
+            set
+            {
+                m_parent = value;
+            }
+        }
+
+        public string name
+        {
+            get
+            {
+                return m_name;
+            }
+
+            set
+            {
+                m_name = value;
+            }
+        }
+
+        public string url
+        {
+            get
+            {
+                return m_url;
+            }
+
+            set
+            {
+                m_url = value;
+            }
+        }
+
+        public string description
+        {
+            get
+            {
+                return m_description;
+            }
+
+            set
+            {
+                m_description = value;
+            }
+        }
+    }
+
 }

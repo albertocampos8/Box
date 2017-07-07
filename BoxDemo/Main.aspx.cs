@@ -23,14 +23,23 @@ namespace BoxDemo
         string m_boxUserOAuth2AccessToken = "";
         string m_boxUserOAuth2RefreshToken = "";
         string m_authFile = HttpContext.Current.Server.MapPath("files") + "\\auth.txt";
-        string m_boxTokenExchangeURI = "https://api.box.com/oauth2/token";
+        string m_clientFile = HttpContext.Current.Server.MapPath("files") + "\\clientSettings.txt";
         string BOXCLIENT = "boxclient";
 
-        private string m_curlLocation = "C:\\WebProjects\\Repository\\Box\\BoxDemo\\packages\\curl_amd_64\\CURL.EXE";
+        private string m_curlLocation = "C:\\WebProjects\\Repository\\Box\\Box\\packages\\curl_amd_64\\CURL.EXE";
         protected void Page_Load(object sender, EventArgs e)
         {
             try
             {
+                if (m_boxAppClientID == "" || m_boxAppClientSecret == "")
+                {
+                    using (StreamReader sR = new StreamReader(m_clientFile))
+                    {
+                        m_boxAppClientID = sR.ReadLine();
+                        m_boxAppClientSecret = sR.ReadLine();
+                        m_boxAppRedirectURI = sR.ReadLine();
+                    }
+                }
                 if (Session[BOXCLIENT] == null)
                 {
                     BoxClient b = new BoxClient(m_boxAppClientID, m_boxAppClientSecret, m_boxAppRedirectURI);
@@ -466,10 +475,13 @@ namespace BoxDemo
         {
             try
             {
+                Boolean success = false;
                 BoxClient b = (BoxClient)Session[BOXCLIENT];
                 jsonTextArea.Text = b.JSON_SharedLink_Delete(
                     (BoxObjects.BoxEnums.ObjectType)int.Parse(cboUpdateItemType.SelectedValue),
-                    Int64.Parse(txtSharedLinkTargetID.Text));
+                    Int64.Parse(txtSharedLinkTargetID.Text),
+                    ref success,
+                    txtFields.Text);
             }
             catch (Exception ex)
             {
@@ -506,9 +518,94 @@ namespace BoxDemo
                 }
 
             } catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnGetWebLink_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                jsonTextArea.Text = b.JSON_WebLink_Get(txtWebLinkID.Text);
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnCreateWebLink_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+
+                jsonTextArea.Text = b.JSON_WebLink_Create(txtWebLinkURL.Text, 
+                                                    txtWebLinkParentFolderID.Text, 
+                                                    txtWebLinkName.Text,
+                                                    txtWebLinkDescription.Text);
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnUpdateWebLink_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                jsonTextArea.Text = b.JSON_WebLink_Update(txtWebLinkID.Text,
+                                                    txtWebLinkURL.Text,
+                                                    txtWebLinkParentFolderID.Text,
+                                                    txtWebLinkName.Text,
+                                                    txtWebLinkDescription.Text);
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnDeleteWebLink_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                Boolean success = false;
+                string resp = b.JSON_WebLink_Delete(txtWebLinkID.Text, ref success);
+                if (success)
                 {
-                    jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+                    resp = "DELETED!";
                 }
-}
+                jsonTextArea.Text = resp;
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnDeleteFile_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                Boolean success = false;
+                string resp = b.JSON_File_Delete(Int64.Parse(txtFileID.Text), ref success);
+                if (success)
+                {
+                    resp = "DELETED!";
+                }
+                jsonTextArea.Text = resp;
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
     }
 }

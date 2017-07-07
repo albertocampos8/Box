@@ -46,7 +46,7 @@ namespace Box
         private string m_boxURI_File_Upload = "https://upload.box.com/api/2.0/files";
         private string m_boxURI_Search = "https://api.box.com/2.0/search";
         private string m_boxURI_Collaboration = "https://api.box.com/2.0/collaborations";
-
+        private string m_boxURI_WebLink = "https://api.box.com/2.0/web_links";
         //JSON serialization settings
         public JsonSerializerSettings JSS =
                 new JsonSerializerSettings
@@ -940,11 +940,12 @@ namespace Box
         /// <param name="csvFields">select the fields of the json object you want returned.  Default is
         /// "shared_link"; set to "" to obtain all info about the shared link after deletion</param>
         /// <returns></returns>
-        public string JSON_SharedLink_Delete(BoxEnums.ObjectType itemType, Int64 itemID, 
+        public string JSON_SharedLink_Delete(BoxEnums.ObjectType itemType, Int64 itemID, ref Boolean blSuccessful,
             string csvFields = "shared_link")
         {
             try
             {
+                blSuccessful = false;
                 //Query Parameters
                 string pcsvFields = generateQueryParameter("fields", "shared_link");
                 string qParams = pcsvFields;
@@ -978,10 +979,11 @@ namespace Box
                     case -1:
                         return "";
                     case -2:
-                        return JSON_SharedLink_Delete(itemType, itemID);
+                        return JSON_SharedLink_Delete(itemType, itemID, ref blSuccessful, csvFields);
                     case -3:
                         return m_errMsg;
                     default:
+                        blSuccessful = true;
                         return boxResp;
                 }
 
@@ -1292,6 +1294,54 @@ namespace Box
                 m_blAttemptedTokenRefresh = false;
             }
         }
+
+        /// <summary>
+        /// Delete a file from BOX
+        /// </summary>
+        /// <param name="folderIDToDelete">ID of the target file</param>
+        /// <param name="blSuccessful">This REF variable is set TRUE if we detect a 204 response,
+        /// indicating empty.</param>
+        /// <returns></returns>
+        public string JSON_File_Delete(Int64 fileIDToDelete, ref Boolean blSuccessful)
+        {
+            string boxResp = "";
+            try
+            {
+
+                string apiResource = m_boxURI_File + "/" + fileIDToDelete.ToString();
+                boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.DELETE,
+                                                "",
+                                                true);
+                //If successful, we should see 204 in the response
+                if (boxResp == "")
+                {
+                    blSuccessful = true;
+                }
+                else
+                {
+                    switch (CheckJSONResult(boxResp))
+                    {
+                        case -1:
+                            return "";
+                        case -2:
+                            return JSON_File_Delete(fileIDToDelete, ref blSuccessful);
+                        case -3:
+                            return m_errMsg;
+                    }
+                }
+                return boxResp;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + boxResp;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
 
         /// <summary>
         /// Uploads a new VERSION of a file to box using curl.
@@ -1678,6 +1728,193 @@ namespace Box
             catch (Exception ex)
             {
                 return ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + boxResp;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Creates a Box Web Link (aka Bookmark-- direct viewer from one folder to another)
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="parentFolderID"></param>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public string JSON_WebLink_Create(string url, string parentFolderID, string name, string description)
+        {
+            try
+            {
+                //Api-- for files or folders?
+                string apiResource = m_boxURI_WebLink;
+
+                //Need the payload for an item object
+                //According to the API, the concept of updating the owner only applies to folders
+                WebLink wl = new WebLink(parentFolderID, url, name, description);
+
+                string data = JsonConvert.SerializeObject(wl, JSS);
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.POST,
+                                                data,
+                                                true);
+
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_WebLink_Create(url, parentFolderID, name, description);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Get JSON for a weblink object
+        /// </summary>
+        /// <param name="weblinkID"></param>
+        /// <returns></returns>
+        public string JSON_WebLink_Get(string webLinkID)
+        {
+            try
+            {
+                //Api-- for files or folders?
+                string apiResource = m_boxURI_WebLink + "/" + webLinkID;
+
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.GET,
+                                                "",
+                                                true);
+
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_WebLink_Get(webLinkID);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Creates a Box Web Link (aka Bookmark-- direct viewer from one folder to another)
+        /// </summary>
+        /// <param name="webLinkID">ID of the Web Link object we are modifying</param>
+        /// <param name="url"></param>
+        /// <param name="parentFolderID"></param>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public string JSON_WebLink_Update(string webLinkID, 
+            string url = null, string parentFolderID = null, string name=null, string description=null)
+        {
+            try
+            {
+                //Api-- for files or folders?
+                string apiResource = m_boxURI_WebLink + "/" + webLinkID;
+
+                //Need the payload for an item object
+                //According to the API, the concept of updating the owner only applies to folders
+                WebLink wl = new WebLink(parentFolderID, url, name, description);
+                wl.id = webLinkID;
+                string data = JsonConvert.SerializeObject(wl, JSS);
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.PUT,
+                                                data,
+                                                true);
+
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_WebLink_Update(webLinkID, url, parentFolderID, name, description);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Delete a Box Web Link
+        /// </summary>
+        /// <param name="webLinkID">ID of the Web Link to delete</param>
+        /// <param name="blSuccessful">Ref parameter that is set TRUE if the delete was successful;
+        /// A successful deletion returns "", which is indistinguishable from an authentication required signal
+        /// without checking this flag.</param>
+        /// <returns></returns>
+        public string JSON_WebLink_Delete(string webLinkID, ref Boolean blSuccessful)
+        {
+            try
+            {
+                blSuccessful = false;
+                //Api-- for files or folders?
+                string apiResource = m_boxURI_WebLink + "/" + webLinkID;
+
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.DELETE,
+                                                "",
+                                                true);
+
+                if (boxResp == "")
+                {
+                    blSuccessful = true;
+                    return "";
+                }
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_WebLink_Delete(webLinkID, ref blSuccessful);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
             }
             finally
             {
