@@ -126,7 +126,7 @@ namespace BoxDemo
                     csvFileExtensions: txtFileExtensions.Text,
                     csvOwnerIDs: txtOwnerIDs.Text,
                     csvContentTypes: txtContentType.Text,
-                    type:bot);
+                    type:bot, csvFields:txtFields.Text);
                 if (resp == "")
                 {
                     Response.Redirect("https://account.box.com/api/oauth2/authorize?response_type=code&client_id=" + m_boxAppClientID +
