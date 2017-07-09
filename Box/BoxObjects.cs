@@ -309,6 +309,7 @@ namespace BoxObjects
         private string m_item_status;
         private ItemCollection m_item_collection;
         private string[] m_tags;
+        private string m_version;
         public string type
         {
             get
@@ -553,6 +554,19 @@ namespace BoxObjects
             set
             {
                 m_tags = value;
+            }
+        }
+
+        public string version
+        {
+            get
+            {
+                return m_version;
+            }
+
+            set
+            {
+                m_version = value;
             }
         }
     }

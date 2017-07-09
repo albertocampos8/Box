@@ -686,8 +686,7 @@ namespace Box
         /// <param name="limit">Max number of items to return; if unspecified, value is 100; maximum is 1000</param>
         /// <param name="folderName"></param>
         /// <returns></returns>
-        public string JSON_Folder_GetItems(Int64 folderID, string csvFields = "", int marker = -1, int offset = -1, int limit = -1,
-            string folderName = "")
+        public string JSON_Folder_GetItems(Int64 folderID, string csvFields = "", int marker = -1, int offset = -1, int limit = -1)
         {
             try
             {
@@ -713,7 +712,7 @@ namespace Box
                     case -1:
                         return "";
                     case -2:
-                        return JSON_Folder_GetItems(folderID, csvFields, marker, offset, limit, folderName);
+                        return JSON_Folder_GetItems(folderID, csvFields, marker, offset, limit);
                     case -3:
                         return m_errMsg;
                     default:
@@ -1388,6 +1387,80 @@ namespace Box
                 m_blAttemptedTokenRefresh = false;
             }
         }
+
+        /// <summary>
+        /// Copies file fileID to folder destinationFolderID
+        /// </summary>
+        /// <param name="itemType">Type of item being copied</param>
+        /// <param name="itemID">ID of item to copy</param>
+        /// <param name="destinationFolderID">ID of folder to receive copy</param>
+        /// <param name="csvFields">csv list of fields to inlude in json response</param>
+        /// <param name="version">Allows you to copy an older version of the file (applies to files only)</param>
+        /// <param name="name">Allows you to change the name of the item after it is copied</param>
+        /// <returns></returns>
+        public string JSON_Item_Copy(BoxEnums.ObjectType itemType, Int64 itemID, Int64 destinationFolderID,
+            string csvFields = "", string newName = null, string version = null )
+        {
+            try
+            {
+                //Query Parameters
+                string pcsvFields = generateQueryParameter("fields", csvFields);
+                string qParams = pcsvFields;
+                if (qParams.Length > 0)
+                {
+                    qParams = "?" + qParams.Substring(1);
+                }
+
+                //Api-- for files or folders?
+                string apiResource = m_boxURI_File + "/" + itemID.ToString() + "/copy" + qParams;
+                if (itemType == BoxEnums.ObjectType.FOLDER)
+                {
+                    apiResource = m_boxURI_Folder + "/" + itemID.ToString() + "/copy" + qParams;
+                }
+
+                //Need the payload for an item object
+
+                Item_FileFolder itm = new Item_FileFolder(newName,
+                    parent: new Parent(destinationFolderID.ToString()));
+                if (version != null)
+                {
+                    itm.version = version;
+                }
+
+                string data = JsonConvert.SerializeObject(itm, JSS);
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.POST,
+                                                data,
+                                                true);
+
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_Item_Copy(itemType,
+                            itemID,
+                            destinationFolderID,
+                            csvFields,  
+                            newName, 
+                            version);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
 
         /// <summary>
         /// Returns JSON search results form box
@@ -2281,6 +2354,169 @@ namespace Box
                 return "";
             }
         }
+
+        /// <summary>
+        /// Returns TRUE if parentFolderID contains exactly 1 folder matching the requested name; the folder
+        /// ID is available through REF parameter locID
+        /// </summary>
+        /// <param name="parentFolderID">Parent Folder in which we are looking.</param>
+        /// <param name="folder">name of the folder we are looking for</param>
+        /// <param name="locID">ID of the found folder; this is set to -1 if nothing is found</param>
+        /// <returns></returns>
+        public Boolean sDirectory_Exists(Int64 parentFolderID, string folder, ref Int64 locID)
+        {
+            try
+            {
+                string result = JSON_Folder_GetItems(parentFolderID, limit:1000);
+                JObject jO = JObject.Parse(result);
+                if (jO["total_count"].ToString() == "1")
+                {
+                    locID = Int64.Parse(jO["entries"][0]["id"].ToString());
+                    return true;
+                } else if (jO["total_count"].ToString() == "0")
+                {
+                    locID = -1;
+                    return false;
+                } else
+                {
+                    //More than one item matched our query.  We need to cycle through the results
+                    //and determine if any name EXACTLY matches the requested folder name.
+                    int Nitems = int.Parse(jO["total_count"].ToString());
+                    for (int i=0;i<Nitems-1;i++)
+                    {
+                        if (jO["entries"][i]["name"].ToString().ToLower() == folder.ToLower())
+                        {
+                            locID = Int64.Parse(jO["entries"][i]["id"].ToString());
+                            return true;
+                        }
+                    }
+                    //If we exited the loop withouth find a match, return false
+                    return false;
+                }
+            } catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                locID = -1;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Creates subDirPath in parentFolderID and returns the folderID for subDirPath.
+        /// If directory already exists, that directory's ID is returned.
+        /// </summary>
+        /// <param name="parentFolderID"></param>
+        /// <param name="subDirPath"></param>
+        /// <returns></returns>
+        public Int64 sDirectory_Create(Int64 parentFolderID, string subDirPath)
+        {
+            m_errMsg = "";
+            Int64 locID = -1;
+            string sharedLink = "";
+            try
+            {
+                //Ensure subDirPath does not start with \
+                if (subDirPath.StartsWith("\\"))
+                {
+                    subDirPath = subDirPath.Substring(1);
+                }
+                //...or end with \
+                if (subDirPath.EndsWith("\\"))
+                {
+                    subDirPath = subDirPath.Substring(0,subDirPath.Length-1);
+                }
+                //Split sub path:
+                List<string> lstSubDirs = subDirPath.Split('\\').ToList();
+                if (sDirectory_Exists(parentFolderID,lstSubDirs[0],ref locID))
+                {
+
+                } else
+                {
+                    //The first dirctory in the sub-path doesn't exist (or there's more than one match)
+                    string json = JSON_Folder_Create(parentFolderID, lstSubDirs[0], ref locID, ref sharedLink);
+                }
+
+                //Are there any sub folders remaining?
+                if (lstSubDirs.Count > 1)
+                {
+                    lstSubDirs.RemoveAt(0);
+                    return sDirectory_Create(locID, String.Join("\\", lstSubDirs.ToArray()));
+                }
+                else
+                {
+                    //We have our directory;
+                    return locID;
+                }
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                return -1;
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a shared link for an object.
+        /// </summary>
+        /// <param name="itemType">Item type</param>
+        /// <param name="itemID">Item ID</param>
+        /// <param name="accessLevel">access level of the shared link</param>
+        /// <param name="removeExpirationDate">Leave at Default value of TRUE to ensure the link does not expire.
+        /// Set FALSE, and the link will be created with whatever default expiration time is set up by your
+        /// enterprise admin</param>
+        /// <returns></returns>
+        public string sSharedLink_Create(BoxEnums.ObjectType itemType, Int64 itemID, 
+            BoxEnums.SharedLinkAccess accessLevel, Boolean removeExpirationDate = true)
+        {
+            try
+            {
+                //Make the shared link
+                string result = JSON_SharedLink_CreateUpdate(itemType, itemID, accessLevel, csvFields: "shared_link");
+                if (removeExpirationDate)
+                {
+                    JSON_SharedLink_RemoveExpirationDate(itemType, itemID);
+                }
+                JObject jO = JObject.Parse(result);
+                return jO["shared_link"]["url"].ToString().Replace("\\/","/");
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Returns the shared link for the given itemType/itemID.
+        /// Returns "" if no shared link exists.
+        /// </summary>
+        /// <param name="itemType"></param>
+        /// <param name="itemID"></param>
+        /// <returns></returns>
+        public string sSharedLink_Get(BoxEnums.ObjectType itemType, Int64 itemID)
+        {
+            try
+            {
+                string result = JSON_SharedLink_Get(itemType, itemID);
+                JObject jO = JObject.Parse(result);
+                if (jO["shared_link"]==null)
+                {
+                    return "";
+                } else
+                {
+
+                }
+                return jO["shared_link"]["url"].ToString().Replace("\\/","/");
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                return "";
+            }
+        }
+
+
 
     }
 }

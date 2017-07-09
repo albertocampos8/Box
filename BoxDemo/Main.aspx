@@ -43,7 +43,7 @@
         <asp:Panel ID="divCreateFolder" runat="server">
             <hr />
             <h3>Create Folder</h3>
-            <asp:Button ID="btnCreateFolder" runat="server" Text="Create" OnClick="btnCreateFolder_Click" />
+            <asp:Button ID="btnCreateFolder" runat="server" Text="Create" OnClick="btnCreateFolder_Click" /><asp:Button ID="btnCreateSubFolderPath" runat="server" Text="Create Path with SubFolders" OnClick="btnCreateSubFolderPath_Click" />
             <asp:Label ID="Label9" runat="server" Text="Parent Folder ID"></asp:Label><asp:TextBox ID="txtCreateFolderParentID" runat="server">31296461418</asp:TextBox><br />
             <asp:Label ID="Label10" runat="server" Text="Folder Name"></asp:Label><asp:TextBox ID="txtCreateFolderName" runat="server"></asp:TextBox><br />
             
@@ -133,6 +133,21 @@
             <asp:Label ID="Label29" runat="server" Text="Description"></asp:Label><asp:TextBox ID="txtUpdateItemDescription" runat="server"></asp:TextBox><br />
             <br />
             
+        </asp:Panel>
+        <asp:Panel ID="divCopy" runat="server">
+            <hr />
+            <h3>Copy</h3>
+            <asp:Button ID="btnCopy" runat="server" Text="Copy Item" OnClick="btnCopy_Click" />
+            <br />
+            <asp:Label ID="Label38" runat="server" Text="Item Type:"></asp:Label>
+                <asp:DropDownList ID="cboCopyItemType" runat="server">
+                    <asp:ListItem Text="File" Value="0"></asp:ListItem>
+                    <asp:ListItem Text="Folder" Value="1" Selected="True"></asp:ListItem>
+                </asp:DropDownList>
+            <asp:Label ID="Label39" runat="server" Text="Target Item ID"></asp:Label><asp:TextBox ID="txtCopyItemID" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label40" runat="server" Text="Destination Folder ID:"></asp:Label><asp:TextBox ID="txtCopyDestinationFolderID" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label41" runat="server" Text="New Name (Optional)"></asp:Label><asp:TextBox ID="txtCopyNewName" runat="server"></asp:TextBox><br />
+            <asp:Label ID="Label42" runat="server" Text="Version (Optional - Files Only)"></asp:Label><asp:TextBox ID="txtCopyVersion" runat="server"></asp:TextBox><br />
         </asp:Panel>
         <asp:Panel ID="divSharedLink" runat="server">
             <hr />

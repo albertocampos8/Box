@@ -448,7 +448,8 @@ namespace BoxDemo
                 jsonTextArea.Text = b.JSON_SharedLink_CreateUpdate(
                     (BoxObjects.BoxEnums.ObjectType)int.Parse(cboUpdateItemType.SelectedValue),
                     Int64.Parse(txtSharedLinkTargetID.Text),
-                    (BoxObjects.BoxEnums.SharedLinkAccess)int.Parse(cboSharedLinkAccess.SelectedValue));
+                    (BoxObjects.BoxEnums.SharedLinkAccess)int.Parse(cboSharedLinkAccess.SelectedValue),
+                    csvFields:txtFields.Text);
             }
             catch (Exception ex)
             {
@@ -463,6 +464,8 @@ namespace BoxDemo
                 BoxClient b = (BoxClient)Session[BOXCLIENT];
                 jsonTextArea.Text = b.JSON_SharedLink_Get(
                     (BoxObjects.BoxEnums.ObjectType)int.Parse(cboUpdateItemType.SelectedValue),
+                    Int64.Parse(txtSharedLinkTargetID.Text)) + Environment.NewLine + Environment.NewLine +
+                    "sResult: " + b.sSharedLink_Get((BoxObjects.BoxEnums.ObjectType)int.Parse(cboUpdateItemType.SelectedValue),
                     Int64.Parse(txtSharedLinkTargetID.Text));
             }
             catch (Exception ex)
@@ -601,6 +604,47 @@ namespace BoxDemo
                     resp = "DELETED!";
                 }
                 jsonTextArea.Text = resp;
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnCreateSubFolderPath_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                Int64 newFolderID = b.sDirectory_Create(Int64.Parse(txtCreateFolderParentID.Text), txtCreateFolderName.Text);
+                jsonTextArea.Text = "NewFolderID: " + newFolderID.ToString() + "\r" +
+                                    "Error message: " + b.ErrMsg;
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
+
+        protected void btnCopy_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                string version = null;
+                if (txtCopyVersion.Text != "")
+                {
+                    version = txtCopyVersion.Text;
+                }
+                string newName = null;
+                if (txtCopyNewName.Text != "")
+                {
+                    newName = txtCopyNewName.Text;
+                }
+                jsonTextArea.Text = b.JSON_Item_Copy((BoxEnums.ObjectType)int.Parse(cboCopyItemType.SelectedValue),
+                    Int64.Parse(txtCopyItemID.Text),
+                    Int64.Parse(txtCopyDestinationFolderID.Text),
+                    txtFields.Text, newName, version);
             }
             catch (Exception ex)
             {
