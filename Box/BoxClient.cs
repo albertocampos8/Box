@@ -1072,7 +1072,7 @@ namespace Box
         /// <param name="deleteIfExists">Leave TRUE to delete the file downloadPathAndName already exists</param>
         /// <param name="version">Option to delete an old version of the file</param>
         /// <returns></returns>
-        public string File_Download(Int64 fileID, string downloadPathAndName, 
+        public Boolean File_Download(Int64 fileID, string downloadPathAndName, 
             Boolean deleteIfExists = true, string version = "")
         {
             string boxResp = "";
@@ -1099,18 +1099,20 @@ namespace Box
                 req.Headers.Add("Authorization: Bearer " + BoxUserOAuth2AccessToken);
                 req.DownloadFile(apiResource, downloadPathAndName);
                 if (File.Exists(downloadPathAndName)) {
-                    return "true";
+                    return true;
                 } else
                 {
-                    return "false";
+                    return false;
                 }
             }
             catch (Exception ex)
             {
-                return ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + boxResp;
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + boxResp;
+                return false;
             }
             finally
             {
+                
                 m_blAttemptedTokenRefresh = false;
             }
         }
@@ -2360,20 +2362,16 @@ namespace Box
         /// ID is available through REF parameter locID
         /// </summary>
         /// <param name="parentFolderID">Parent Folder in which we are looking.</param>
-        /// <param name="folder">name of the folder we are looking for</param>
+        /// <param name="itemName">name of the folder we are looking for</param>
         /// <param name="locID">ID of the found folder; this is set to -1 if nothing is found</param>
         /// <returns></returns>
-        public Boolean sDirectory_Exists(Int64 parentFolderID, string folder, ref Int64 locID)
+        public Boolean sItem_Exists(Int64 parentFolderID, string itemName, ref Int64 locID)
         {
             try
             {
                 string result = JSON_Folder_GetItems(parentFolderID, limit:1000);
                 JObject jO = JObject.Parse(result);
-                if (jO["total_count"].ToString() == "1")
-                {
-                    locID = Int64.Parse(jO["entries"][0]["id"].ToString());
-                    return true;
-                } else if (jO["total_count"].ToString() == "0")
+                if (jO["total_count"].ToString() == "0")
                 {
                     locID = -1;
                     return false;
@@ -2384,7 +2382,7 @@ namespace Box
                     int Nitems = int.Parse(jO["total_count"].ToString());
                     for (int i=0;i<Nitems-1;i++)
                     {
-                        if (jO["entries"][i]["name"].ToString().ToLower() == folder.ToLower())
+                        if (jO["entries"][i]["name"].ToString().ToLower() == itemName.ToLower())
                         {
                             locID = Int64.Parse(jO["entries"][i]["id"].ToString());
                             return true;
@@ -2427,7 +2425,7 @@ namespace Box
                 }
                 //Split sub path:
                 List<string> lstSubDirs = subDirPath.Split('\\').ToList();
-                if (sDirectory_Exists(parentFolderID,lstSubDirs[0],ref locID))
+                if (sItem_Exists(parentFolderID,lstSubDirs[0],ref locID))
                 {
 
                 } else
@@ -2515,6 +2513,8 @@ namespace Box
                 return "";
             }
         }
+
+
 
 
 

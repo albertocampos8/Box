@@ -27,6 +27,10 @@ namespace BoxDemo
         string BOXCLIENT = "boxclient";
 
         private string m_curlLocation = "C:\\WebProjects\\Repository\\Box\\Box\\packages\\curl_amd_64\\CURL.EXE";
+        //private string m_curlLocation = HttpContext.Current.Server.MapPath("packages") + "\\curl_amd_64\\CURL.EXE";
+        //private string m_curlLocation = "CURL.EXE"
+        //Above doesn't work if there is a space in the directory; I tried setting it to simply "CURL.EXE" and 
+        //putting the .exe in the same directory as the bin/debug/  .dll, but that didn't work.
         protected void Page_Load(object sender, EventArgs e)
         {
             try
@@ -413,7 +417,7 @@ namespace BoxDemo
             {
                 BoxClient b = (BoxClient)Session[BOXCLIENT];
                 jsonTextArea.Text = b.File_Download(Int64.Parse(txtFileID.Text),
-                    HttpContext.Current.Server.MapPath("files") + "\\" + txtUploadFileName.Text);
+                    HttpContext.Current.Server.MapPath("files") + "\\" + txtUploadFileName.Text).ToString();
             }
             catch (Exception ex)
             {
