@@ -655,5 +655,28 @@ namespace BoxDemo
                 jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
             }
         }
+
+        protected void btnUploadSimple_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                b.CurlFullPath = m_curlLocation;
+                Int64 fileID = -1;
+                if(b.sFile_Upload_Curl(Int64.Parse(txtUploadParentID.Text),
+                    HttpContext.Current.Server.MapPath("files") + "\\" + txtUploadFileName.Text,
+                    ref fileID))
+                {
+                    jsonTextArea.Text = fileID.ToString();
+                } else
+                {
+                    jsonTextArea.Text = b.ErrMsg;
+                }
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
     }
 }

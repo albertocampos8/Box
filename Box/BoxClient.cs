@@ -2380,7 +2380,7 @@ namespace Box
                     //More than one item matched our query.  We need to cycle through the results
                     //and determine if any name EXACTLY matches the requested folder name.
                     int Nitems = int.Parse(jO["total_count"].ToString());
-                    for (int i=0;i<Nitems-1;i++)
+                    for (int i=0;i<Nitems;i++)
                     {
                         if (jO["entries"][i]["name"].ToString().ToLower() == itemName.ToLower())
                         {
@@ -2514,7 +2514,34 @@ namespace Box
             }
         }
 
+        /// <summary>
+        /// Uploads a file to box using curl; returns TRUE if successful, with the file id in ByRef variable FileID
+        /// </summary>
+        /// <param name="folderID">The folder ID</param>
+        /// <param name="pathAndNameOfFile">location/file we are uploading</param>
+        /// <param name="FileID">ID of the uploaded file</param>
+        /// <returns></returns>
+        public Boolean sFile_Upload_Curl(Int64 folderID, string pathAndNameOfFile, ref Int64 FileID)
+        {
+            try
+            {
 
+                string result = JSON_File_Upload_Curl(folderID, pathAndNameOfFile);
+                JObject jO = JObject.Parse(result);
+                FileID = Int64.Parse(jO["entries"][0]["id"].ToString());
+                return true;
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                FileID = -1;
+                return false;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
 
 
 

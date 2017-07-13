@@ -634,6 +634,15 @@ namespace BoxDemo {
         protected global::System.Web.UI.WebControls.Button btnUpload;
         
         /// <summary>
+        /// btnUploadSimple control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnUploadSimple;
+        
+        /// <summary>
         /// btnUpdateUploadedFile control.
         /// </summary>
         /// <remarks>

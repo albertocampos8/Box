@@ -105,6 +105,7 @@
             <h3>File Actions</h3>
             <asp:Button ID="btnGetFileInfo" runat="server" Text="Get File Info" OnClick="btnGetFileInfo_Click"  />
             <asp:Button ID="btnUpload" runat="server" Text="Upload New File" OnClick="btnUpload_Click"  />
+            <asp:Button ID="btnUploadSimple" runat="server" Text="Upload New File (Simple)" OnClick="btnUploadSimple_Click"  />
             <asp:Button ID="btnUpdateUploadedFile" runat="server" Text="ReUpload File" OnClick="btnUpdateUploadedFile_Click" />
             <asp:Button ID="btnDownloadFile" runat="server" Text="Download File" OnClick="btnDownloadFile_Click" />
             <asp:Button ID="btnDeleteFile" runat="server" Text="Delete File" OnClick="btnDeleteFile_Click" />
