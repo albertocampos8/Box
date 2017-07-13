@@ -678,5 +678,29 @@ namespace BoxDemo
                 jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
             }
         }
+
+        protected void btnCopySimple_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BoxClient b = (BoxClient)Session[BOXCLIENT];
+                Int64 newItemID = -1;
+                if (b.sItem_Copy((BoxEnums.ObjectType)int.Parse(cboCopyItemType.SelectedValue),
+                    Int64.Parse(txtCopyItemID.Text),
+                    Int64.Parse(txtCopyDestinationFolderID.Text),
+                    ref newItemID))
+                {
+                    jsonTextArea.Text = newItemID.ToString();
+                } else
+                {
+                    jsonTextArea.Text = "Unable to copy: " + b.ErrMsg;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                jsonTextArea.Text = ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+        }
     }
 }

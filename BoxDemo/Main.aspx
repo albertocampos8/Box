@@ -139,6 +139,7 @@
             <hr />
             <h3>Copy</h3>
             <asp:Button ID="btnCopy" runat="server" Text="Copy Item" OnClick="btnCopy_Click" />
+            <asp:Button ID="btnCopySimple" runat="server" Text="Copy Item (Simple)" OnClick="btnCopySimple_Click" />
             <br />
             <asp:Label ID="Label38" runat="server" Text="Item Type:"></asp:Label>
                 <asp:DropDownList ID="cboCopyItemType" runat="server">

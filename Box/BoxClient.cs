@@ -2400,6 +2400,36 @@ namespace Box
         }
 
         /// <summary>
+        /// Copies itemID to newParentID; returns true if successful, false otherwise
+        /// </summary>
+        /// <param name="itemType">Type of object we are copying (applies to itemID)</param>
+        /// <param name="itemID">Id of the item (file or folder) we are copying</param>
+        /// <param name="newParentID">The folder ID that will accept the copy</param>
+        /// <param name="newitemID">The resulting ID of the copied item.</param>
+        /// <returns></returns>
+        public Boolean sItem_Copy(BoxEnums.ObjectType itemType, Int64 itemID, Int64 newParentID,  ref Int64 newItemID)
+        {
+            try
+            {
+                string result = JSON_Item_Copy(itemType,itemID, newParentID);
+                JObject jO = JObject.Parse(result);
+                newItemID = Int64.Parse(jO["entries"][0]["id"].ToString());
+                return true;
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = m_errMsg + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace;
+                newItemID = -1;
+                return false;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+
+        /// <summary>
         /// Creates subDirPath in parentFolderID and returns the folderID for subDirPath.
         /// If directory already exists, that directory's ID is returned.
         /// </summary>
