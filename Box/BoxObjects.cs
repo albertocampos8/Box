@@ -8,7 +8,7 @@ namespace BoxObjects
     public class BoxEnums
     {
         
-        public enum ObjectType { FILE, FOLDER, WEB_LINK, UNSPECIFIED }
+        public enum ObjectType { FILE, FOLDER, WEB_LINK, UNSPECIFIED, COMMENT }
         public enum ContentType { NAME, DESCRIPTION, FILE_CONTENT, COMMENTS, TAGS, UNSPECIFIED }
         public enum CollaboratorRole
         {
@@ -33,6 +33,8 @@ namespace BoxObjects
                         return "folder";
                     case BoxEnums.ObjectType.WEB_LINK:
                         return "web_link";
+                    case BoxEnums.ObjectType.COMMENT:
+                        return "comment";
                     default:
                         return "";
                 }
@@ -1497,5 +1499,81 @@ namespace BoxObjects
             }
         }
     }
+
+    public class Comment
+    {
+        
+        private string m_type;
+        private string m_id = "";
+        private Boolean m_is_reply_comment = false;
+        private string m_message = "";
+        private string m_tagged_message = "";
+        private MiniUser m_created_by = null;
+        private string created_at = "";
+        private Item_FileFolder m_item = null;
+        private string m_modified_at = "";
+
+        public string Type { get => m_type; set => m_type = value; }
+
+        /// <summary>
+        /// The ID of the comment object
+        /// </summary>
+        public string Id { get => m_id; set => m_id = value; }
+
+        /// <summary>
+        /// Whether or not this comment is a reply to another comment
+        /// </summary>
+        public bool Is_reply_comment { get => m_is_reply_comment; set => m_is_reply_comment = value; }
+
+        /// <summary>
+        /// The comment text that the user typed
+        /// </summary>
+        public string Message { get => m_message; set => m_message = value; }
+
+        /// <summary>
+        /// The string representing the comment text with @mentions included. @mention format is @[id:username] where id is user_id and username is display name. Field is not included by default.
+        /// </summary>
+        public string Tagged_message { get => m_tagged_message; set => m_tagged_message = value; }
+
+        /// <summary>
+        /// A mini user object representing the author of the comment
+        /// </summary>
+        public MiniUser Created_by { get => m_created_by; set => m_created_by = value; }
+
+        /// <summary>
+        /// The time this comment was created
+        /// </summary>
+        public string Created_at { get => created_at; set => created_at = value; }
+
+        /// <summary>
+        /// The object this comment was placed on
+        /// </summary>
+        public Item_FileFolder Item { get => m_item; set => m_item = value; }
+
+        /// <summary>
+        /// The time this comment was last modified
+        /// </summary>
+        public string Modified_at { get => m_modified_at; set => m_modified_at = value; }
+
+
+        public Comment()
+        {
+
+        }
+        /// <summary>
+        /// Constructor for comment object
+        /// </summary>
+        /// <param name="item_type">Object type on which we are making comment.  Use BoxEnum.Object Type-- either a file or a comment </param>
+        /// <param name="itemID">ID of the item on which we are commenting.</param>
+        /// <param name="message">Text message of comment</param>
+        /// <param name="tagged_message">The text of the comment, including @[userid:Username] somewhere in the message to mention the user, which will send them a direct email, letting them know they’ve been mentioned in a comment</param>
+        public Comment(BoxEnums.ObjectType item_type, Int64 itemID, string message, string tagged_message)
+        {
+            m_item = new Item_FileFolder(BoxEnums.DecodeBoxObjectType(item_type), itemID.ToString());
+            m_message = message;
+            m_tagged_message = tagged_message;
+        }
+    }
+
 
 }

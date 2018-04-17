@@ -47,6 +47,8 @@ namespace Box
         private string m_boxURI_Search = "https://api.box.com/2.0/search";
         private string m_boxURI_Collaboration = "https://api.box.com/2.0/collaborations";
         private string m_boxURI_WebLink = "https://api.box.com/2.0/web_links";
+        private string m_boxURI_Comment = "https://api.box.com/2.0/comments";
+
         //JSON serialization settings
         public JsonSerializerSettings JSS =
                 new JsonSerializerSettings
@@ -568,6 +570,192 @@ namespace Box
                 m_blAttemptedTokenRefresh = false;
             }
         }
+
+        /// <summary>
+        /// Gets information about a comment object
+        /// </summary>
+        /// <param name="commentID">The comment ID</param>
+        /// <param name="csvFields">Response fields from the server in which you are interested.  Use this to lessen the data to parse.</param>
+        /// <returns></returns>
+        public string JSON_Comment_GetInfo(Int64 commentID, string csvFields = "")
+        {
+            try
+            {
+                string pcsvFields = generateQueryParameter("fields", csvFields);
+                string qParams = pcsvFields;
+                if (qParams.Length > 0)
+                {
+                    qParams = "?" + qParams.Substring(1);
+                }
+                string apiResource = m_boxURI_Comment + "/" + commentID + qParams;
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.GET,
+                                                "",
+                                                true);
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_Comment_GetInfo(commentID, csvFields);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Creates a comment on an Item
+        /// </summary>
+        /// <param name="itemType">The type of object (file or comment) to which the comment is added</param>
+        /// <param name="itemID">ID of the object getting commented on</param>
+        /// <param name="message">Text of the comment</param>
+        /// <param name="tagged_message">The text of the comment, including @[userid:Username] somewhere in the message to 
+        /// mention the user, which will send them a direct email, letting them know they’ve been mentioned in a comment</param>
+        /// <returns></returns>
+        public string JSON_Comment_Create(BoxEnums.ObjectType itemType, Int64 itemID, string message = "", string tagged_message = "")
+        {
+            try
+            {
+                string apiResource = m_boxURI_Comment;
+
+                //Need the payload for an item object
+                //According to the API, the concept of updating the owner only applies to folders
+                Comment c = new Comment(itemType, itemID, message, tagged_message);
+
+                string data = JsonConvert.SerializeObject(c, JSS);
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.POST,
+                                                data,
+                                                true);
+
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_Comment_Create(itemType, itemID, message, tagged_message);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Updates the text of a comment object
+        /// </summary>
+        /// <param name="new_comment_text">New Text of the comment</param>
+        /// <param name="comment_id">ID of the comment object getting updated</param>
+        /// <returns></returns>
+        public string JSON_Comment_Update(string new_comment_text, Int64 commentID)
+        {
+            try
+            {
+                string apiResource = m_boxURI_Comment + "/" + commentID.ToString();
+
+                //Need the payload for an item object
+                //According to the API, the concept of updating the owner only applies to folders
+                Comment c = new Comment();
+                c.Message = new_comment_text;
+
+                string data = JsonConvert.SerializeObject(c, JSS);
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.PUT,
+                                                data,
+                                                true);
+
+                switch (CheckJSONResult(boxResp))
+                {
+                    case -1:
+                        return "";
+                    case -2:
+                        return JSON_Comment_Update(new_comment_text, commentID);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Delete a comment on an object
+        /// </summary>
+        /// <param name="commentIDToDelete">ID of the target comment to delete</param>
+        /// <param name="blSuccessful">This REF variable is set TRUE if we detect a 204 response,
+        /// indicating empty.</param>
+        /// <returns></returns>
+        public string JSON_Comment_Delete(Int64 commentIDToDelete, ref Boolean blSuccessful)
+        {
+            string boxResp = "";
+            try
+            {
+
+                string apiResource = m_boxURI_Comment + "/" + commentIDToDelete.ToString();
+                boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.DELETE,
+                                                "",
+                                                true);
+                //If successful, we should see 204 in the response
+                if (boxResp == "")
+                {
+                    blSuccessful = true;
+                }
+                else
+                {
+                    switch (CheckJSONResult(boxResp))
+                    {
+                        case -1:
+                            return "";
+                        case -2:
+                            return JSON_File_Delete(commentIDToDelete, ref blSuccessful);
+                        case -3:
+                            return m_errMsg;
+                    }
+                }
+                return boxResp;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + boxResp;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
+
 
         /// <summary>
         /// Updates a file/folder object
@@ -1251,6 +1439,7 @@ namespace Box
         /// <returns></returns>
         public string JSON_File_Upload_Curl(Int64 folderID, string pathAndNameOfFile)
         {
+            string boxResp = "";
             try
             {
                 string fileName = pathAndNameOfFile.Split('\\')[pathAndNameOfFile.Split('\\').GetUpperBound(0)];
@@ -1275,7 +1464,7 @@ namespace Box
 
                 //Run these args through curl
                 Curl c = new Curl(m_curlFullPath);
-                string boxResp = c.Execute(args);
+                boxResp = c.Execute(args);
                 switch (CheckJSONResult(boxResp))
                 {
                     case -1:
@@ -1283,14 +1472,14 @@ namespace Box
                     case -2:
                         return JSON_File_Upload_Curl(folderID, pathAndNameOfFile);
                     case -3:
-                        return m_errMsg;
+                        return m_errMsg + Environment.NewLine + boxResp;
                 }
                 return boxResp;
 
             }
             catch (Exception ex)
             {
-                return ex.Message + Environment.NewLine + ex.StackTrace;
+                return ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + "Box Response: " + Environment.NewLine +boxResp;
             }
             finally
             {
@@ -2064,7 +2253,7 @@ namespace Box
                 //Get the old tags
                 List<string> lstOldTags = GetFolderTags(folderID, ref errOccurred, ref OAuth2Required);
                 //Add new tags to Old tags if they don't exist yet
-                for (int i = 0; i < lstOldTags.Count-1; i++)
+                for (int i = 0; i < lstOldTags.Count; i++)
                 {
                     if (!newTags.Contains(lstOldTags[i]))
                     {
@@ -2073,6 +2262,7 @@ namespace Box
                 }
                 if (newTags.Count > 0)
                 {
+                    newTags.Sort();
                     TagQueryResult tqr = new TagQueryResult();
                     tqr.tags = newTags.ToArray();
                     string boxResp = ExecuteAPICall(m_boxURI_Folder + "/" + folderID.ToString(),
@@ -2358,12 +2548,12 @@ namespace Box
         }
 
         /// <summary>
-        /// Returns TRUE if parentFolderID contains exactly 1 folder matching the requested name; the folder
-        /// ID is available through REF parameter locID
+        /// Returns TRUE if parentFolderID contains exactly 1 item matching the requested name; the item
+        /// ID is available through REF parameter locID (item may be file or folder)
         /// </summary>
         /// <param name="parentFolderID">Parent Folder in which we are looking.</param>
         /// <param name="itemName">name of the folder we are looking for</param>
-        /// <param name="locID">ID of the found folder; this is set to -1 if nothing is found</param>
+        /// <param name="locID">ID of the found item; this is set to -1 if nothing is found</param>
         /// <returns></returns>
         public Boolean sItem_Exists(Int64 parentFolderID, string itemName, ref Int64 locID)
         {
@@ -2411,10 +2601,19 @@ namespace Box
         {
             try
             {
+                m_errMsg = "";
                 string result = JSON_Item_Copy(itemType,itemID, newParentID);
                 JObject jO = JObject.Parse(result);
-                newItemID = Int64.Parse(jO["entries"][0]["id"].ToString());
-                return true;
+                newItemID = Int64.Parse(jO["id"].ToString());
+                if (newItemID > 0)
+                {
+                    return true;
+                } else
+                {
+                    m_errMsg = result;
+                    return false;
+                }
+                
             }
             catch (Exception ex)
             {
@@ -2544,6 +2743,115 @@ namespace Box
             }
         }
 
+
+        /// <summary>
+        /// Comments on an object; returns the comment ID if successful, -1 otherwise.
+        /// </summary>
+        /// <param name="itmType">Type of object to comment on (either file or comment)</param>
+        /// <param name="itmID">ID of the item being commented on</param>
+        /// <param name="message">Text of comment</param>
+        /// <param name="tagged_message">Tagged comment</param>
+        /// <returns></returns>
+        public Int64 sComment_Create(BoxEnums.ObjectType itmType, Int64 itmID, string message="", string tagged_message="")
+        {
+            try
+            {
+                string result = JSON_Comment_Create(itmType, itmID, message, tagged_message);
+                JObject jO = JObject.Parse(result);
+                Int64 newID = -1;
+                Int64.TryParse(jO["id"].ToString(), out newID);
+                if (newID>0)
+                {
+                    return -1;
+                } else
+                {
+                    return newID;
+                }
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Returns a list of comment objects for a given File ID
+        /// </summary>
+        /// <param name="fileID"></param>
+        /// <returns></returns>
+        public string sFile_GetComments(Int64 fileID, ref List<Comment> outLst, int offset = -1, int limit = -1)
+        {
+            try
+            {
+                string poffset = generateQueryParameter("offset", offset, -1);
+                string plimit = generateQueryParameter("limit", limit, -1);
+
+                string qParams = poffset + plimit;
+                if (qParams.Length > 0)
+                {
+                    qParams = "?" + qParams.Substring(1);
+                }
+                string apiResource = m_boxURI_File + "/" + fileID + "/comments" + qParams;
+                string boxResp = ExecuteAPICall(apiResource,
+                                                ReqVerb.GET,
+                                                "",
+                                                true);
+                //If successful, we should have total_count value in the response
+                int n = GetResultCount(boxResp);
+                switch (n)
+                {
+                    case -1:
+                        //Iterate over the results in the list and make comment objects to put in the list
+                        JObject jO = JObject.Parse(boxResp);
+                        int newLimit = int.Parse(jO["limit"].ToString());
+                        int Nitems = int.Parse(jO["total_count"].ToString());
+                        //for (int i = 0; i < Nitems; i++)
+                        for (int i = 0; i < newLimit; i++)
+                        {
+                            string cmtText = jO["entries"][i]["message"].ToString();
+                            string cmtBy = jO["entries"][i]["created_by"]["name"].ToString();
+                            string cmtDate = jO["entries"][i]["created_at"].ToString();
+                            Int64 cmtID = Int64.Parse(jO["entries"][i]["id"].ToString());
+
+                            Comment c = new Comment();
+                            c.Message = cmtText;
+                            c.Created_by.name = cmtBy;
+                            c.Created_at = DateTime.Parse(cmtDate).ToString();
+                            c.Id = cmtID.ToString();
+
+                            outLst.Add(c);
+
+                        }
+                        //If we have all items, we're done--return
+                        if (offset + limit >= Nitems)
+                        {
+                            return "";
+                        } else
+                        {
+                            //call the procedure again, with updated offset and limit values
+                            return sFile_GetComments(fileID, ref outLst, offset+limit, newLimit);
+                        }
+                        break;
+                    case -2:
+                        return sFile_GetComments(fileID, ref outLst, offset, limit);
+                    case -3:
+                        return m_errMsg;
+                    default:
+                        return boxResp;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message + Environment.NewLine + ex.StackTrace;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+            
+        }
         /// <summary>
         /// Uploads a file to box using curl; returns TRUE if successful, with the file id in ByRef variable FileID
         /// </summary>
@@ -2553,17 +2861,18 @@ namespace Box
         /// <returns></returns>
         public Boolean sFile_Upload_Curl(Int64 folderID, string pathAndNameOfFile, ref Int64 FileID)
         {
+            string result = "";
             try
             {
 
-                string result = JSON_File_Upload_Curl(folderID, pathAndNameOfFile);
+                result = JSON_File_Upload_Curl(folderID, pathAndNameOfFile);
                 JObject jO = JObject.Parse(result);
                 FileID = Int64.Parse(jO["entries"][0]["id"].ToString());
                 return true;
             }
             catch (Exception ex)
             {
-                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace;
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + result;
                 FileID = -1;
                 return false;
             }
@@ -2573,6 +2882,59 @@ namespace Box
             }
         }
 
+        /// <summary>
+        /// Uploads a file to box using curl; returns TRUE if successful, with the file id in ByRef variable FileID
+        /// If the file already exists, then UPDATES the file with the supplied file
+        /// </summary>
+        /// <param name="folderID">The folder ID</param>
+        /// <param name="pathAndNameOfFile">location/file we are uploading</param>
+        /// <param name="FileID">ID of the uploaded file</param>
+        /// <param name="doNothingIfExists">Set this TRUE if you do NOT want to overwrite the file that already exists in Box</param>
+        /// <param name="blDeleteIfExists">When this is true, the if the file is already in Box, it is deleted before uploading the next version.
+        /// Do this if you want the file version to appear as 'v1' in Box.</param>
+        /// <returns></returns>
+        public Boolean sFile_UploadUpdate_Curl(Int64 folderID, string pathAndNameOfFile, ref Int64 FileID,
+            Boolean doNothingIfExists = false,
+            Boolean blDeleteIfExists = false)
+        {
+            string result = "";
+            try
+            {
+                string fName = pathAndNameOfFile.Split('\\')[pathAndNameOfFile.Split('\\').GetUpperBound(0)];
+                if (sItem_Exists(folderID, fName, ref FileID))
+                {
+                    if (blDeleteIfExists)
+                    {
+                        Boolean blOK = false;
+                        JSON_File_Delete(FileID, ref blOK);
+                    }
+                    else if (doNothingIfExists)
+                    {
+                        return true;
+                    }
+                    //Update the file with current pathAndFile
+                    result = JSON_File_Update_Curl(FileID, pathAndNameOfFile);
+                } else
+                {
+                    //Upload a new file
+                    result = JSON_File_Upload_Curl(folderID, pathAndNameOfFile);
+                }
+                
+                JObject jO = JObject.Parse(result);
+                FileID = Int64.Parse(jO["entries"][0]["id"].ToString());
+                return true;
+            }
+            catch (Exception ex)
+            {
+                m_errMsg = ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + result;
+                FileID = -1;
+                return false;
+            }
+            finally
+            {
+                m_blAttemptedTokenRefresh = false;
+            }
+        }
 
 
     }
